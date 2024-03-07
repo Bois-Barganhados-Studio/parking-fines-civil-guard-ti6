@@ -1,0 +1,91 @@
+version: "3.8"
+
+services:
+    pgsql:
+        image: 'postgres:14'
+        ports:
+            - '${FORWARD_DB_PORT:-5432}:${DB_PORT}'
+        environment:
+            PGPASSWORD: '${DB_PASSWORD:-secret}'
+            POSTGRES_DB: '${DB_DATABASE}'
+            POSTGRES_USER: '${DB_USERNAME}'
+            POSTGRES_PASSWORD: '${DB_PASSWORD:-secret}'
+        volumes:
+            - 'pgsql14:/var/lib/postgresql/data'
+        networks:
+            - backend
+    spring-api:
+        image: leonjrmartins/spring-api:latest
+        depends_on:
+            - pgsql
+        env_file:
+            - .env
+        ports:
+            - ${SPRING_LOCAL_PORT}:${SPRING_DOCKER_PORT}
+        volumes:
+            - ./backend:/app
+        networks:
+            - backend
+            - load_balancer_network
+            - kafka_net
+    zookeeper:
+        image: confluentinc/cp-zookeeper:latest
+        networks: 
+            - backend
+            - kafka_net
+        environment:
+            ZOOKEEPER_CLIENT_PORT: ${ZOOKEEPER_PORT}
+            ZOOKEEPER_TICK_TIME: 2000
+    kafka:
+        image: 'bitnami/kafka:latest'
+        environment:
+            KAFKA_BROKER_ID: 1
+            KAFKA_ZOOKEEPER_CONNECT: ${ZOOKEEPER_HOST}:${ZOOKEEPER_PORT}
+            ALLOW_PLAINTEXT_LISTENER: 'yes'
+            KAFKA_CFG_LISTENERS: INTERNAL://0.0.0.0:9092
+            KAFKA_CFG_ADVERTISED_LISTENERS: INTERNAL://${KAFKA_HOST}:${KAFKA_PORT}
+            KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: INTERNAL:PLAINTEXT
+            KAFKA_INTER_BROKER_LISTENER_NAME: 'INTERNAL'
+            KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+        depends_on:
+            - spring-api
+            - zookeeper
+        networks:
+            - backend
+            - kafka_net
+    init-kafka:
+        image: 'bitnami/kafka:latest'
+        depends_on:
+            - kafka
+        entrypoint: [ '/bin/sh', '-c' ]
+        command: |
+            "
+            # blocks until kafka is reachable
+            kafka-topics.sh --bootstrap-server ${KAFKA_HOST}:${KAFKA_PORT} --list
+
+            echo -e 'Creating kafka topics'
+            kafka-topics.sh --bootstrap-server ${KAFKA_HOST}:${KAFKA_PORT} --create --if-not-exists --topic license-plate-topic-1 --replication-factor 1 --partitions 5 --config retention.ms=86400000
+            echo -e 'Successfully created the following topics:'
+            kafka-topics.sh --bootstrap-server ${KAFKA_HOST}:${KAFKA_PORT} --list
+            "
+    kafdrop:
+        image: obsidiandynamics/kafdrop:latest
+        networks: 
+            - kafka_net
+            - load_balancer_network
+        depends_on:
+            - kafka
+        ports:
+            - ${KAFDROP_PORT}:${KAFDROP_PORT}
+        environment:
+            KAFKA_BROKERCONNECT: ${KAFKA_HOST}:${KAFKA_PORT}
+volumes:
+    pgsql14:
+        driver: local
+networks:
+    kafka_net:
+        driver: overlay
+    backend:
+        driver: overlay
+    load_balancer_network:
+        external: true
