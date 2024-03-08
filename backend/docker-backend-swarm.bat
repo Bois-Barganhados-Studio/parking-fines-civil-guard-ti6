@@ -16,5 +16,4 @@ docker network create --driver overlay kafka_net
 
 @REM deploy app stacks
 docker stack deploy -c docker-compose.yml --resolve-image always backend
-docker service scale backend_spring-api=5
 docker service ls
