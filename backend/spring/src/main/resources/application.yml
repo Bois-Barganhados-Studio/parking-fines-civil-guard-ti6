@@ -5,24 +5,23 @@ springdoc:
     swagger-ui.operationsSorter: method  
 
 spring: 
-    # configurações de acesso ao banco de dados
-    # datasource:
-    #     url: jdbc:mysql://192.168.18.23:4306/ox_meeting?useSSL=false
-    #     username: ox
-    #     password: ox123456*.*
-    #     driver-class-name: com.mysql.cj.jdbc.Driver
-    # # configurações da ORM de acesso aos dados
-    # jpa:
-    #     hibernate:
-    #         ddl-auto: create-drop #update quando mais avançado no sistema
-    #     show-sql: true
-    #     open-in-view: true
-    #     properties:
-    #         hibernate:
-    #             format-sql: true
-    #     database: mysql
-    #     database-platform: org.hibernate.dialect.MySQLDialect
-    # configurações de horarios e datas
+    #configurações de acesso ao banco de dados para postgres
+    datasource:
+        url: jdbc:postgresql://pgsql:5432/parking_db
+        username: park_api
+        password: park_api_123
+        driver-class-name: org.postgresql.Driver
+    # configurações da ORM de acesso aos dados
+    jpa:
+        hibernate:
+            ddl-auto: create-drop #update quando mais avançado no sistema
+        show-sql: true
+        open-in-view: true
+        properties:
+            hibernate:
+                format-sql: true
+        database: postgresql
+    #configurações de horarios e datas
     jackson:
         date-format: "yyyy-MM-dd HH:mm:ss.SSS"
         time-zone: "GMT+8"
@@ -30,7 +29,3 @@ spring:
 server:
     # Porta de execução do backend
     port: 8030
-    #ssl.key-store: keystore.p12
-    #ssl.key-store-password: ELFssl73556081597534682Alpha*.*
-    #ssl.keyStoreType: PKCS12
-    #ssl.keyAlias: ElfCertificate
