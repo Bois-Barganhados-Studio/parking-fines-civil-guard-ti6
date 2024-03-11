@@ -19,6 +19,7 @@ public class LicensePlateApiApplication {
 	
 	@GetMapping("/teste")
 	public static String teste(){
+		System.out.println("Teste!");
 		return "Teste";
 	}
 
