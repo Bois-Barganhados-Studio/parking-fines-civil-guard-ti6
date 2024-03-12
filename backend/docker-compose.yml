@@ -49,10 +49,12 @@ services:
         max_replicas_per_node: 2
       update_config:
         failure_action: pause
-        parallelism: 2
-        delay: 10s
+        parallelism: 1
+        delay: 60s
       restart_policy:
-        condition: none
+        condition: on-failure
+        delay: 5s
+        max_attempts: 3
 
   zookeeper:
     image: confluentinc/cp-zookeeper:latest
@@ -71,7 +73,7 @@ services:
       update_config:
         failure_action: pause
         parallelism: 2
-        delay: 10s
+        delay: 0s
       restart_policy:
         condition: none
 
@@ -101,7 +103,7 @@ services:
       update_config:
         failure_action: pause
         parallelism: 2
-        delay: 10s
+        delay: 15s
       restart_policy:
         condition: on-failure
         delay: 5s
@@ -133,7 +135,7 @@ services:
       update_config:
         failure_action: pause
         parallelism: 2
-        delay: 10s
+        delay: 20s
       restart_policy:
         condition: none
 
