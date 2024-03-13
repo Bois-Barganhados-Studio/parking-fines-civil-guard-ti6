@@ -13,9 +13,9 @@ public class LicensePlateApiApplication {
 		SpringApplication.run(LicensePlateApiApplication.class, args);
 	}
 	
-	@GetMapping("/teste")
+	@GetMapping("/hello")
 	public static String teste(){
-		return "Teste";
+		return "License Plate API is running!";
 	}
 
 }
