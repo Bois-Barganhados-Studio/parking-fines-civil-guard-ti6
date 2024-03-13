@@ -4,8 +4,12 @@ import java.util.UUID;
 
 import org.hibernate.annotations.GenericGenerator;
 
+import com.boisbarganhados.license_plate_api.models.enums.FineValue;
+
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
@@ -27,5 +31,9 @@ public class Fine {
     @GeneratedValue(generator = "UUID")
     @GenericGenerator(name = "UUID", strategy = "org.hibernate.id.UUIDGenerator")
     private UUID id;
+
+    @Column(nullable = false)
+    @Enumerated(EnumType.STRING)
+    private FineValue fineValue;
 
 }

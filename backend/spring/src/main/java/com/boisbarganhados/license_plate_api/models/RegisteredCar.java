@@ -28,4 +28,25 @@ public class RegisteredCar {
     @GenericGenerator(name = "UUID", strategy = "org.hibernate.id.UUIDGenerator")
     private UUID id;
 
+    @Column(nullable = false, length = 10)
+    private String licensePlate;
+
+    @Column(nullable = false, length = 100)
+    private String licensePlateCountry;
+
+    @Column(nullable = false, columnDefinition = "boolean default false")
+    private boolean mercoSul;
+
+    @Column(nullable = false, length = 255)
+    private String model;
+
+    @Column(nullable = false, length = 255)
+    private String color;
+
+    @Column(nullable = false, length = 255)
+    private String brand;
+
+    @Column(nullable = false, columnDefinition = "integer default 0")
+    private int year;
+
 }
