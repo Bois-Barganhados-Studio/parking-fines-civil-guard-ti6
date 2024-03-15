@@ -1,0 +1,6 @@
+deskew
+easyocr
+ultralytics
+opencv-python
+numpy
+ultralytics

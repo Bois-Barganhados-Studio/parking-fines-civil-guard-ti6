@@ -1,4 +1,3 @@
-pip install opencv-python
-pip install easyocr
-pip install ultralytics
-pip install numpy
+pip install -r requirements.txt
+pip uninstall opencv-python-headless -y 
+pip install opencv-python --upgrade
