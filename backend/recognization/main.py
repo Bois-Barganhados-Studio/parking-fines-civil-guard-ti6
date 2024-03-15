@@ -2,32 +2,24 @@ import cv2 as cv
 import numpy as np
 from ultralytics import YOLO
 import easyocr
+import os
+import math
+from deskew import determine_skew
+from typing import Tuple, Union
 
-def deskew(im, max_skew=10):
+def deskewcustom(im, max_skew=10):
     height, width,zz = im.shape
-
-    # Create a grayscale image and denoise it
     im_gs = cv.cvtColor(im, cv.COLOR_BGR2GRAY)
     im_gs = cv.fastNlMeansDenoising(im_gs, h=3)
-
-    # Create an inverted B&W copy using Otsu (automatic) thresholding
     im_bw = cv.threshold(im_gs, 0, 255, cv.THRESH_BINARY_INV | cv.THRESH_OTSU)[1]
-
-    # Detect lines in this image. Parameters here mostly arrived at by trial and error.
     lines = cv.HoughLinesP(
         im_bw, 1, np.pi / 180, 200, minLineLength=width / 12, maxLineGap=width / 150
     )
-
-    # Collect the angles of these lines (in radians)
     angles = []
     for line in lines:
         x1, y1, x2, y2 = line[0]
         angles.append(np.arctan2(y2 - y1, x2 - x1))
-
-    # If the majority of our lines are vertical, this is probably a landscape image
     landscape = np.sum([abs(angle) > np.pi / 4 for angle in angles]) > len(angles) / 2
-
-    # Filter the angles to remove outliers based on max_skew
     if landscape:
         angles = [
             angle
@@ -36,15 +28,10 @@ def deskew(im, max_skew=10):
         ]
     else:
         angles = [angle for angle in angles if abs(angle) < np.deg2rad(max_skew)]
-
     if len(angles) < 5:
-        # Insufficient data to deskew
+        print('Insufficient data to deskew')
         return im
-
-    # Average the angles to a degree offset
     angle_deg = np.rad2deg(np.median(angles))
-
-    # If this is landscape image, rotate the entire canvas appropriately
     if landscape:
         if angle_deg < 0:
             im = cv.rotate(im, cv.ROTATE_90_CLOCKWISE)
@@ -52,8 +39,6 @@ def deskew(im, max_skew=10):
         elif angle_deg > 0:
             im = cv.rotate(im, cv.ROTATE_90_COUNTERCLOCKWISE)
             angle_deg -= 90
-
-    # Rotate the image by the residual offset
     M = cv.getRotationMatrix2D((width / 2, height / 2), angle_deg, 1)
     im = cv.warpAffine(im, M, (width, height), borderMode=cv.BORDER_REPLICATE)
     return im
@@ -61,49 +46,84 @@ def deskew(im, max_skew=10):
 def remove_noise(image):
     return cv.fastNlMeansDenoisingColored(image, None, 10, 10, 7, 15)
 
+def rotate(
+        image: np.ndarray, angle: float, background: Union[int, Tuple[int, int, int]]
+) -> np.ndarray:
+    old_width, old_height = image.shape[:2]
+    angle_radian = math.radians(angle)
+    width = abs(np.sin(angle_radian) * old_height) + abs(np.cos(angle_radian) * old_width)
+    height = abs(np.sin(angle_radian) * old_width) + abs(np.cos(angle_radian) * old_height)
+
+    image_center = tuple(np.array(image.shape[1::-1]) / 2)
+    rot_mat = cv.getRotationMatrix2D(image_center, angle, 1.0)
+    rot_mat[1, 2] += (width - old_width) / 2
+    rot_mat[0, 2] += (height - old_height) / 2
+    return cv.warpAffine(image, rot_mat, (int(round(height)), int(round(width))), borderValue=background)
+
+
+
 model = YOLO('best.pt')
+responses = []
 
-results = model.predict('./resources/test2.jpg', save=True, save_crop=True, project="run",  name="resultados", exist_ok=True)
+def recognize(model, path):
 
-cropped = 'run/resultados/crops/License_Plate/test2.jpg'
+    model.predict(path, save=True, save_crop=True, project="run",  name="resultados", exist_ok=True)
 
-imcropped = cv.imread(cropped)
+    cropped = 'run/resultados/crops/License_Plate/' + path.split('/')[-1]
 
-# license_plate_crop_gray = cv.cvtColor(imcropped, cv.COLOR_BGR2GRAY)
-# _, license_plate_crop_thresh = cv.threshold(license_plate_crop_gray, 64, 255, cv.THRESH_OTSU)
+    imcropped = cv.imread(cropped)
 
-# cv.imshow('thresh', license_plate_crop_thresh)
-# cv.waitKey(0)
+    norm_img = np.zeros((imcropped.shape[0], imcropped.shape[1]))
+    img = cv.normalize(imcropped, norm_img, 0, 255, cv.NORM_MINMAX)
+    upscale = 300 / img.shape[0]
+    img = cv.resize(img, (0,0), fx=upscale, fy=upscale)
+    img = cv.cvtColor(img, cv.COLOR_BGR2GRAY)
+    angle = determine_skew(img)
+    img = rotate(img, angle, (0, 0, 0))
+    img = cv.fastNlMeansDenoising(img, h=3)
+    img = cv.threshold(img, 64, 255, cv.THRESH_BINARY_INV + cv.THRESH_OTSU)[1]
+    
+    cv.imshow('threshold', img)
+    cv.waitKey(0)
 
-#invert colors of image
-#imcropped = cv.bitwise_not(imcropped)
-norm_img = np.zeros((imcropped.shape[0], imcropped.shape[1]))
-img = cv.normalize(imcropped, norm_img, 0, 255, cv.NORM_MINMAX)
-upscale = 300 / img.shape[0]
-img = cv.resize(img, (0,0), fx=upscale, fy=upscale)
+    kernel = np.ones((2,2),np.uint8)
+    erosion = cv.dilate(img,kernel,iterations = 2)
+    #Remover frestas e buracos em caracteres
+    kernelmorph = np.ones((1,1),np.uint8)
+    erosion = cv.morphologyEx(erosion, cv.MORPH_CLOSE, kernelmorph)
+    kernel_erosion = np.ones((2,2),np.uint8)
+    erosion = cv.erode(erosion, kernel_erosion, iterations=2)
 
-img = deskew(img)
+    path_test = 'run/test_ft.jpg'
 
-img = cv.cvtColor(img, cv.COLOR_BGR2GRAY)
-img = cv.fastNlMeansDenoising(img, h=3)
-img = cv.threshold(img, 0, 255, cv.THRESH_BINARY + cv.THRESH_OTSU)[1]
+    cv.imwrite(path_test, erosion)
+    cv.imshow('erosion', erosion)
+    cv.waitKey(0)
+    print(erosion.shape[1]/2)
+    reader = easyocr.Reader(['en'], gpu=False)
+    result = reader.readtext(path_test, allowlist='ABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890-', blocklist='!@#$%^&*()_+=[]{}|.:;<>?/`~', paragraph=False, min_size=erosion.shape[1]/2, rotation_info=[-30, 0, 30])
 
-cv.imshow('crop', img)
-cv.waitKey(0)
+    textap = ''
+    for (bbox, text, prob) in result:
+        print(f'{text} ({prob:.2f})')
+        textap += text + ' '
+    return textap
+    
+def test_images(folder_path, model, responses=[]):
+    if not os.path.isdir(folder_path):
+        print("Invalid directory path.")
+        return
+    files = os.listdir(folder_path)
+    image_files = [file for file in files if file.lower().endswith(('.png', '.jpg', '.jpeg', '.gif', '.bmp'))]
+    for image_file in image_files:
+        image_path = os.path.join(folder_path, image_file)
+        image_path = image_path.replace('\\', '/')
+        try:
+            responses.append(recognize(model, image_path))
+        except Exception as e:
+            print(f"Error displaying image {image_file}: {e}")
+    return responses
 
-kernel = np.ones((5,5),np.uint8)
-erosion = cv.erode(img,kernel,iterations = 1)
-
-
-blur=cv.GaussianBlur(erosion, (5,5), 0)
-
-cv.imshow('thresh', blur)
-cv.waitKey(0)
-
-cv.imwrite('run/test_ft.jpg', erosion)
-
-reader = easyocr.Reader(['en'], gpu=False)
-result = reader.readtext('run/test_ft.jpg')
-
-for (bbox, text, prob) in result:
-    print(f'{text} ({prob:.2f})')
+print('start testing...')     
+print('responses:')    
+print(test_images('resources', model))
