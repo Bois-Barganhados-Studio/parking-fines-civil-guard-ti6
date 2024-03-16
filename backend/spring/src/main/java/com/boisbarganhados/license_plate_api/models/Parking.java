@@ -42,10 +42,10 @@ public class Parking {
     @Column(nullable = true)
     private LocalDateTime exitDate;
 
-    @Column(nullable = false, length = 100)
+    @Column(nullable = false, length = 14)
     private String latitude;
 
-    @Column(nullable = false, length = 100)
+    @Column(nullable = false, length = 14)
     private String longitude;
 
     @OneToOne(mappedBy = "parking")

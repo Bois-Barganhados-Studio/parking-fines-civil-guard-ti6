@@ -35,16 +35,16 @@ public class RotatingPlace {
     @GenericGenerator(name = "UUID", strategy = "org.hibernate.id.UUIDGenerator")
     private UUID id;
 
-    @Column(nullable = false, length = 100)
+    @Column(nullable = false, length = 14)
     private String startLatitude;
 
-    @Column(nullable = false, length = 100)
+    @Column(nullable = false, length = 14)
     private String startLongitude;
 
-    @Column(nullable = false, length = 100)
+    @Column(nullable = false, length = 14)
     private String endLatitude;
 
-    @Column(nullable = false, length = 100)
+    @Column(nullable = false, length = 14)
     private String endLongitude;
 
     @Column(nullable = false)
