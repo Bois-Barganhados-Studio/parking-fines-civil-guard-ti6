@@ -13,7 +13,7 @@ public class LicensePlateApiApplication {
 		SpringApplication.run(LicensePlateApiApplication.class, args);
 	}
 	
-	@GetMapping("/hello")
+	@GetMapping("/test")
 	public static String teste(){
 		return "License Plate API is running!";
 	}

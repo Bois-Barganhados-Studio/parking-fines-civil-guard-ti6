@@ -9,12 +9,11 @@ import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 
 public record CheckParkingRequest(
-        @NotBlank @Length(min = 4, max = 14) String latitude,
+                @NotBlank @Length(min = 4, max = 14) String latitude,
 
-        @NotBlank @Length(min = 4, max = 14) String longitude,
+                @NotBlank @Length(min = 4, max = 14) String longitude,
 
-        @NotNull MultipartFile picture,
-        
-        UUID rotating_place_id 
-        ) {
+                @NotNull MultipartFile picture,
+
+                UUID rotating_place_id) {
 }
