@@ -1,5 +1,9 @@
 package com.boisbarganhados.license_plate_api.dtos.responses;
 
-public class PlateValidationResource {
-    
+import lombok.Builder;
+
+@Builder
+public record PlateValidationResource(
+        String plate,
+        String message) {
 }

@@ -7,7 +7,9 @@ import org.springframework.web.multipart.MultipartFile;
 
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
+import lombok.Builder;
 
+@Builder
 public record CheckParkingRequest(
                 @NotBlank @Length(min = 4, max = 14) String latitude,
 
