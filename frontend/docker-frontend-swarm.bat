@@ -10,10 +10,8 @@ docker swarm init
 for /f "delims=" %%x in ('type .env') do set "%%x"
 
 @REM creating network overlay
-docker network create --driver overlay load_balancer_network
-docker network create --driver overlay backend
-docker network create --driver overlay kafka_net
+docker network create --driver overlay load_balancer_front_network
 
 @REM deploy app stacks
-docker stack deploy -c docker-compose.yml --resolve-image always --with-registry-auth backend
+docker stack deploy -c docker-compose.yml --resolve-image always --with-registry-auth frontend
 docker service ls

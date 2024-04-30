@@ -9,6 +9,10 @@ COPY src src
 RUN ./mvnw install -DskipTests
 RUN mkdir -p target/dependency && (cd target/dependency; jar -xf ../*.jar)
 
+RUN addgroup -S spring && adduser -S spring -G spring
+
+user spring:spring
+
 # Expose the port the app runs on
 EXPOSE 8030
 
