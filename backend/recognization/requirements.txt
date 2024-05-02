@@ -4,3 +4,4 @@ ultralytics
 opencv-python
 numpy
 ultralytics
+confluent_kafka
