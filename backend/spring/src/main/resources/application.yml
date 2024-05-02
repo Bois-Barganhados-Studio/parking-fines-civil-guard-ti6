@@ -29,3 +29,5 @@ spring:
 server:
     # Porta de execução do backend
     port: 8030
+api:
+    default-page-size: 10

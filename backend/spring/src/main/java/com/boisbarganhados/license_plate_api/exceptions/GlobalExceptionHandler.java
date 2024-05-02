@@ -30,51 +30,62 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(RuntimeException.class)
     public ResponseEntity<ExceptionDto> RuntimeException(RuntimeException e) {
-
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(
                 new ExceptionDto(HttpStatus.BAD_REQUEST, e.getMessage()));
     }
 
     @ExceptionHandler(IllegalArgumentException.class)
     public ResponseEntity<ExceptionDto> IllegalArgumentException(IllegalArgumentException e) {
-
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(
                 new ExceptionDto(HttpStatus.BAD_REQUEST, e.getMessage()));
     }
 
     @ExceptionHandler(DataIntegrityViolationException.class)
     public ResponseEntity<ExceptionDto> DataIntegrityViolationException(DataIntegrityViolationException e) {
-
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(
                 new ExceptionDto(HttpStatus.BAD_REQUEST, e.getMessage()));
     }
 
     @ExceptionHandler(InvalidRequestException.class)
     public ResponseEntity<ExceptionDto> InvalidRequestException(InvalidRequestException e) {
-
         return ResponseEntity.status(HttpStatus.UNPROCESSABLE_ENTITY).body(
                 new ExceptionDto(HttpStatus.UNPROCESSABLE_ENTITY, e.getMessage()));
     }
 
     @ExceptionHandler(ServiceException.class)
     public ResponseEntity<ExceptionDto> ServiceException(ServiceException e) {
-
         return ResponseEntity.status(HttpStatus.UNPROCESSABLE_ENTITY).body(
                 new ExceptionDto(HttpStatus.UNPROCESSABLE_ENTITY, e.getMessage()));
     }
 
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ExceptionDto> Exception(Exception e) {
-
         return ResponseEntity.status(HttpStatus.BAD_GATEWAY).body(
                 new ExceptionDto(HttpStatus.BAD_GATEWAY, e.getMessage()));
     }
 
     @ExceptionHandler(MethodArgumentNotValidException.class)
     public ResponseEntity<ExceptionDto> MethodArgumentNotValidException(MethodArgumentNotValidException e) {
-
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(
                 new ExceptionDto(HttpStatus.BAD_REQUEST, e.getMessage()));
+    }
+
+    @ExceptionHandler(PlateInvalidFormatException.class)
+    public ResponseEntity<ExceptionDto> PlateInvalidFormatException(PlateInvalidFormatException e) {
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(
+                new ExceptionDto(HttpStatus.BAD_REQUEST, e.getMessage()));
+    }
+
+    @ExceptionHandler(PlateNotFoundException.class)
+    public ResponseEntity<ExceptionDto> PlateNotFoundException(PlateNotFoundException e) {
+        return ResponseEntity.status(HttpStatus.UNPROCESSABLE_ENTITY).body(
+                new ExceptionDto(HttpStatus.UNPROCESSABLE_ENTITY, e.getMessage()));
+    }
+
+    @ExceptionHandler(PlateOCRFailedException.class)
+    public ResponseEntity<ExceptionDto> PlateOCRFailedException(PlateOCRFailedException e) {
+        return ResponseEntity.status(HttpStatus.UNPROCESSABLE_ENTITY).body(
+                new ExceptionDto(HttpStatus.UNPROCESSABLE_ENTITY, e.getMessage()));
     }
 
 }

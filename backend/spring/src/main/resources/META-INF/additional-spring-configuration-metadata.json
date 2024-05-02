@@ -1,0 +1,5 @@
+{"properties": [{
+  "name": "api.default-page-size",
+  "type": "java.lang.Integer",
+  "description": "default page size for API responses"
+}]}
