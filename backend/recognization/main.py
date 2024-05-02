@@ -67,7 +67,10 @@ responses = []
 
 def recognize(model, path):
 
-    model.predict(path, save=True, save_crop=True, project="run",  name="resultados", exist_ok=True)
+    prediction = model.predict(path, save=True, save_crop=True, project="run",  name="resultados", exist_ok=True)
+    
+    #check if confidence is greater than 0.6
+    print(prediction)
 
     cropped = 'run/resultados/crops/License_Plate/' + path.split('/')[-1]
 
@@ -101,7 +104,8 @@ def recognize(model, path):
     cv.waitKey(0)
     print(erosion.shape[1]/2)
     reader = easyocr.Reader(['en'], gpu=False)
-    result = reader.readtext(path_test, allowlist='ABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890-', blocklist='!@#$%^&*()_+=[]{}|.:;<>?/`~', paragraph=False, min_size=erosion.shape[1]/2, rotation_info=[-30, 0, 30])
+    result = reader.readtext(path_test, allowlist='ABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890-', blocklist='!@#$%^&*()_+=[]{}|.:;<>?/`~',
+                             paragraph=False, min_size=erosion.shape[1]/2, rotation_info=[-30, 0, 30])
 
     textap = ''
     for (bbox, text, prob) in result:
