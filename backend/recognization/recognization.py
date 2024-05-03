@@ -6,6 +6,7 @@ import os
 import math
 from deskew import determine_skew
 from typing import Tuple, Union
+from PIL import Image
 
 def deskewcustom(im, max_skew=10):
     height, width,zz = im.shape
@@ -66,8 +67,8 @@ model = YOLO('best.pt')
 responses = []
 
 def recognize(model, path):
-
-    prediction = model.predict(path, save=True, save_crop=True, project="run",  name="resultados", exist_ok=True)
+    image = Image.open(path)
+    prediction = model.predict(image, save=True, save_crop=True, project="run",  name="resultados", exist_ok=True)
     
     #check if confidence is greater than 0.6
     print(prediction)
@@ -86,7 +87,7 @@ def recognize(model, path):
     img = cv.fastNlMeansDenoising(img, h=3)
     img = cv.threshold(img, 64, 255, cv.THRESH_BINARY_INV + cv.THRESH_OTSU)[1]
     
-    cv.imshow('threshold', img)
+    #cv.imshow('threshold', img)
     cv.waitKey(0)
 
     kernel = np.ones((2,2),np.uint8)
@@ -100,7 +101,7 @@ def recognize(model, path):
     path_test = 'run/test_ft.jpg'
 
     cv.imwrite(path_test, erosion)
-    cv.imshow('erosion', erosion)
+    #cv.imshow('erosion', erosion)
     cv.waitKey(0)
     print(erosion.shape[1]/2)
     reader = easyocr.Reader(['en'], gpu=False)
@@ -128,6 +129,6 @@ def test_images(folder_path, model, responses=[]):
             print(f"Error displaying image {image_file}: {e}")
     return responses
 
-print('start testing...')     
-print('responses:')    
-print(test_images('resources', model))
+def start_recognization(path):
+    response = recognize(model, path)
+    return response
