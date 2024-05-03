@@ -5,17 +5,18 @@ import java.util.UUID;
 import org.hibernate.validator.constraints.Length;
 import org.springframework.web.multipart.MultipartFile;
 
-import jakarta.validation.constraints.NotBlank;
+// import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Null;
 import lombok.Builder;
 
 @Builder
 public record CheckParkingRequest(
-                @NotBlank @Length(min = 4, max = 14) String latitude,
+                @Null @Length(min = 4, max = 14) String latitude,
 
-                @NotBlank @Length(min = 4, max = 14) String longitude,
+                @Null @Length(min = 4, max = 14) String longitude,
 
-                @NotNull MultipartFile picture,
+                @NotNull MultipartFile file,
 
-                UUID rotating_place_id) {
+                @Null UUID rotating_place_id) {
 }

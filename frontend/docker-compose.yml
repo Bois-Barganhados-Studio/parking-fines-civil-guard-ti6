@@ -1,0 +1,32 @@
+version: "3.8"
+
+services:
+  frontend:
+    image: leonjrmartins/next-front-license-plates:latest
+    ports:
+      - 3000:3000
+    volumes:
+      - ./frontend:/app
+    networks:
+      - frontend
+    deploy:
+      mode: replicated
+      replicas: 2
+      endpoint_mode: vip
+      placement:
+        max_replicas_per_node: 2
+      update_config:
+        failure_action: pause
+        parallelism: 1
+        delay: 60s
+      restart_policy:
+        condition: on-failure
+        delay: 5s
+        max_attempts: 3
+volumes:
+  frontend:
+    driver: local
+
+networks:
+  frontend:
+    driver: bridge

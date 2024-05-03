@@ -58,11 +58,11 @@ public class GlobalExceptionHandler {
                 new ExceptionDto(HttpStatus.UNPROCESSABLE_ENTITY, e.getMessage()));
     }
 
-    @ExceptionHandler(Exception.class)
-    public ResponseEntity<ExceptionDto> Exception(Exception e) {
-        return ResponseEntity.status(HttpStatus.BAD_GATEWAY).body(
-                new ExceptionDto(HttpStatus.BAD_GATEWAY, e.getMessage()));
-    }
+    // @ExceptionHandler(Exception.class)
+    // public ResponseEntity<ExceptionDto> Exception(Exception e) {
+    //     return ResponseEntity.status(HttpStatus.BAD_GATEWAY).body(
+    //             new ExceptionDto(HttpStatus.BAD_GATEWAY, e.getMessage()));
+    // }
 
     @ExceptionHandler(MethodArgumentNotValidException.class)
     public ResponseEntity<ExceptionDto> MethodArgumentNotValidException(MethodArgumentNotValidException e) {

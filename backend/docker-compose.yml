@@ -124,6 +124,7 @@ services:
 
       echo -e 'Creating kafka topics'
       kafka-topics.sh --bootstrap-server ${KAFKA_HOST}:${KAFKA_PORT} --create --if-not-exists --topic license-plate-topic-1 --replication-factor 1 --partitions 5 --config retention.ms=86400000
+      kafka-topics.sh --bootstrap-server ${KAFKA_HOST}:${KAFKA_PORT} --create --if-not-exists --topic py-response-topic-1 --replication-factor 1 --partitions 5 --config retention.ms=86400000
       echo -e 'Successfully created the following topics:'
       kafka-topics.sh --bootstrap-server ${KAFKA_HOST}:${KAFKA_PORT} --list
       "
@@ -166,8 +167,62 @@ services:
         max_attempts: 3
         window: 120s
 
+  recognizer:
+    image: leonjrmartins/license-plate-recognization-py:latest
+    networks:
+      - backend
+      - kafka_net
+    volumes:
+      - ./backend:/app
+    depends_on:
+      - spring-api
+      - kafka
+      - init-kafka
+    deploy:
+      mode: replicated
+      replicas: 1
+      endpoint_mode: vip
+      placement:
+        max_replicas_per_node: 3
+      update_config:
+        failure_action: pause
+        parallelism: 2
+        delay: 20s
+      restart_policy:
+        condition: on-failure
+        delay: 5s
+        max_attempts: 3
+        window: 120s
+
+  frontend:
+    image: leonjrmartins/next-front-license-plates:latest
+    ports:
+      - 3000:3000
+    volumes:
+      - ./frontend:/app
+    networks:
+      - load_balancer_network
+    deploy:
+      mode: replicated
+      replicas: 2
+      endpoint_mode: vip
+      placement:
+        max_replicas_per_node: 2
+      update_config:
+        failure_action: pause
+        parallelism: 1
+        delay: 60s
+      restart_policy:
+        condition: on-failure
+        delay: 5s
+        max_attempts: 3
+
 volumes:
   pgsql14:
+    driver: local
+  frontend:
+    driver: local
+  backend:
     driver: local
 
 networks:

@@ -4,7 +4,7 @@ echo Starting swarm cluster configuration!
 export $(cat .env) > /dev/null 2>&1
 
 # creating network overlay
-docker network create --driver overlay load_balancer_front_network
+#docker network create --driver overlay load_balancer_front_network
 # start docker swarm
 docker swarm init
 

@@ -12,6 +12,8 @@ RUN mkdir -p target/dependency && (cd target/dependency; jar -xf ../*.jar)
 # create storage folder to store license plate images
 RUN mkdir -p /workspace/app/storage
 
+RUN chmod -R 777 /workspace/app/storage
+
 RUN addgroup -S spring && adduser -S spring -G spring
 
 user spring:spring

@@ -5,6 +5,11 @@ springdoc:
     swagger-ui.operationsSorter: method  
 
 spring: 
+    #set max upload size to files
+    servlet:
+        multipart:
+            max-file-size: 100MB
+            max-request-size: 100MB
     #configurações de acesso ao banco de dados para postgres
     datasource:
         url: jdbc:postgresql://pgsql:5432/parking_db
@@ -25,7 +30,20 @@ spring:
     jackson:
         date-format: "yyyy-MM-dd HH:mm:ss.SSS"
         time-zone: "GMT+8"
-        
+    
+    kafka:
+        producer: 
+            bootstrap-servers: kafka:9092
+            key-serializer: org.apache.kafka.common.serialization.StringSerializer
+            value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
+        consumer:  
+            bootstrap-servers: kafka:9092
+            group-id: parking-group
+            key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+            value-deserializer: org.springframework.kafka.support.serializer.JsonDeserializer
+            auto-offset-reset: earliest
+            enable-auto-commit: false
+            max-poll-records: 1
 server:
     # Porta de execução do backend
     port: 8030
