@@ -123,8 +123,8 @@ services:
       kafka-topics.sh --bootstrap-server ${KAFKA_HOST}:${KAFKA_PORT} --list
 
       echo -e 'Creating kafka topics'
-      kafka-topics.sh --bootstrap-server ${KAFKA_HOST}:${KAFKA_PORT} --create --if-not-exists --topic license-plate-topic-1 --replication-factor 1 --partitions 5 --config retention.ms=86400000
-      kafka-topics.sh --bootstrap-server ${KAFKA_HOST}:${KAFKA_PORT} --create --if-not-exists --topic py-response-topic-1 --replication-factor 1 --partitions 5 --config retention.ms=86400000
+      kafka-topics.sh --bootstrap-server ${KAFKA_HOST}:${KAFKA_PORT} --create --if-not-exists --topic license-plate-topic-1 --replication-factor 1 --partitions 3 --config retention.ms=86400000
+      kafka-topics.sh --bootstrap-server ${KAFKA_HOST}:${KAFKA_PORT} --create --if-not-exists --topic py-response-topic-1 --replication-factor 1 --partitions 1 --config retention.ms=86400000
       echo -e 'Successfully created the following topics:'
       kafka-topics.sh --bootstrap-server ${KAFKA_HOST}:${KAFKA_PORT} --list
       "
@@ -180,7 +180,7 @@ services:
       - init-kafka
     deploy:
       mode: replicated
-      replicas: 1
+      replicas: 3
       endpoint_mode: vip
       placement:
         max_replicas_per_node: 3
