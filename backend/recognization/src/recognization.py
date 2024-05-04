@@ -8,6 +8,9 @@ from deskew import determine_skew
 from typing import Tuple, Union
 from PIL import Image
 
+model = YOLO('best.pt')
+responses = []
+
 def deskewcustom(im, max_skew=10):
     height, width,zz = im.shape
     im_gs = cv.cvtColor(im, cv.COLOR_BGR2GRAY)
@@ -62,21 +65,16 @@ def rotate(
     return cv.warpAffine(image, rot_mat, (int(round(height)), int(round(width))), borderValue=background)
 
 
-
-model = YOLO('best.pt')
-responses = []
-
 def recognize(model, path):
-    image = Image.open(path)
-    prediction = model.predict(image, save=True, save_crop=True, project="run",  name="resultados", exist_ok=True)
-    
-    #check if confidence is greater than 0.6
-    print(prediction)
-
-    cropped = 'run/resultados/crops/License_Plate/' + path.split('/')[-1]
-
+    # check if path is a string
+    if not isinstance(path, str):
+        decoded_path = path.decode()
+    else:
+        decoded_path = path
+    model.predict(decoded_path, save=True, save_crop=True, project="/app",  name="resultados", exist_ok=True)
+    cropped = '/app/resultados/crops/License_Plate/' +decoded_path.split('/')[-1]
+    cropped = cropped.replace('.png', '.jpg')
     imcropped = cv.imread(cropped)
-
     norm_img = np.zeros((imcropped.shape[0], imcropped.shape[1]))
     img = cv.normalize(imcropped, norm_img, 0, 255, cv.NORM_MINMAX)
     upscale = 300 / img.shape[0]
@@ -86,10 +84,6 @@ def recognize(model, path):
     img = rotate(img, angle, (0, 0, 0))
     img = cv.fastNlMeansDenoising(img, h=3)
     img = cv.threshold(img, 64, 255, cv.THRESH_BINARY_INV + cv.THRESH_OTSU)[1]
-    
-    #cv.imshow('threshold', img)
-    cv.waitKey(0)
-
     kernel = np.ones((2,2),np.uint8)
     erosion = cv.dilate(img,kernel,iterations = 2)
     #Remover frestas e buracos em caracteres
@@ -97,17 +91,12 @@ def recognize(model, path):
     erosion = cv.morphologyEx(erosion, cv.MORPH_CLOSE, kernelmorph)
     kernel_erosion = np.ones((2,2),np.uint8)
     erosion = cv.erode(erosion, kernel_erosion, iterations=2)
-
-    path_test = 'run/test_ft.jpg'
-
+    path_test = '/app/resultados/run' +decoded_path.split('/')[-1]
+    path_test = path_test.replace('.png', '.jpg')
     cv.imwrite(path_test, erosion)
-    #cv.imshow('erosion', erosion)
-    cv.waitKey(0)
-    print(erosion.shape[1]/2)
-    reader = easyocr.Reader(['en'], gpu=False)
+    reader = easyocr.Reader(['en'], gpu=False, model_storage_directory='~/.EasyOCR/model', download_enabled=False)
     result = reader.readtext(path_test, allowlist='ABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890-', blocklist='!@#$%^&*()_+=[]{}|.:;<>?/`~',
-                             paragraph=False, min_size=erosion.shape[1]/2, rotation_info=[-30, 0, 30])
-
+                             paragraph=False, min_size=erosion.shape[1]/2, rotation_info=[-25, 0, 25])
     textap = ''
     for (bbox, text, prob) in result:
         print(f'{text} ({prob:.2f})')
