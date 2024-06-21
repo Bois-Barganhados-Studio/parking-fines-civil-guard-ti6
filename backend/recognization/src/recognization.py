@@ -6,7 +6,6 @@ import os
 import math
 from deskew import determine_skew
 from typing import Tuple, Union
-from PIL import Image
 
 model = YOLO('best.pt')
 responses = []
@@ -71,8 +70,8 @@ def recognize(model, path):
         decoded_path = path.decode()
     else:
         decoded_path = path
-    model.predict(decoded_path, save=True, save_crop=True, project="/app",  name="resultados", exist_ok=True)
-    cropped = '/app/resultados/crops/License_Plate/' +decoded_path.split('/')[-1]
+    model.predict(decoded_path, save=True, save_crop=True, project="../../app",  name="resultados", exist_ok=True)
+    cropped = '../../app/resultados/crops/License_Plate/' +decoded_path.split('/')[-1]
     cropped = cropped.replace('.png', '.jpg')
     imcropped = cv.imread(cropped)
     norm_img = np.zeros((imcropped.shape[0], imcropped.shape[1]))
@@ -86,17 +85,16 @@ def recognize(model, path):
     img = cv.threshold(img, 64, 255, cv.THRESH_BINARY_INV + cv.THRESH_OTSU)[1]
     kernel = np.ones((2,2),np.uint8)
     erosion = cv.dilate(img,kernel,iterations = 2)
-    #Remover frestas e buracos em caracteres
     kernelmorph = np.ones((1,1),np.uint8)
     erosion = cv.morphologyEx(erosion, cv.MORPH_CLOSE, kernelmorph)
     kernel_erosion = np.ones((2,2),np.uint8)
     erosion = cv.erode(erosion, kernel_erosion, iterations=2)
-    path_test = '/app/resultados/run' +decoded_path.split('/')[-1]
+    path_test = '../../app/resultados/run' +decoded_path.split('/')[-1]
     path_test = path_test.replace('.png', '.jpg')
     cv.imwrite(path_test, erosion)
     reader = easyocr.Reader(['en'], gpu=False, model_storage_directory='~/.EasyOCR/model', download_enabled=False)
     result = reader.readtext(path_test, allowlist='ABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890-', blocklist='!@#$%^&*()_+=[]{}|.:;<>?/`~',
-                             paragraph=False, min_size=erosion.shape[1]/2, rotation_info=[-25, 0, 25])
+                             paragraph=False, min_size=erosion.shape[1]/2, rotation_info=[-35, 0, 35], text_threshold=0.8, low_text=0.5)
     textap = ''
     for (bbox, text, prob) in result:
         print(f'{text} ({prob:.2f})')
@@ -119,5 +117,10 @@ def test_images(folder_path, model, responses=[]):
     return responses
 
 def start_recognization(path):
+    #create a thread to run the recognization
     response = recognize(model, path)
+    return response
+
+def start_test_model(path):
+    response = test_images(path, model)
     return response

@@ -1,10 +1,15 @@
+import threading
 from confluent_kafka import Consumer, Producer, KafkaException, KafkaError
-from recognization import start_recognization
+from recognization import start_recognization, start_test_model
 import os
+import time
 
 # consts to topics
 TOPIC_LICENSE_PLATE = 'license-plate-topic-1'
 RESPONSE_TOPIC = 'py-response-topic-1'
+
+print("Testing model:")
+print(start_test_model('./resources'))
 
 def delivery_callback(err, msg):
     if err:
@@ -36,6 +41,7 @@ def create_producer():
 
 def consume(c):
     c.subscribe([TOPIC_LICENSE_PLATE])
+    print("Subscribed to topic %s" % TOPIC_LICENSE_PLATE)
     # try to connect to kafka and if it fails, retry until it connects
     while True:
         try:
@@ -47,7 +53,7 @@ def consume(c):
                     continue
                 else:
                     print(msg.error())
-                    raise KafkaException(msg.error())
+                    continue
             print('%% %s [%d] at offset %d with key %s:\n' %
                   (msg.topic(), msg.partition(), msg.offset(),
                    str(msg.key())))
@@ -58,20 +64,28 @@ def consume(c):
             # after reading mark the message as consumed
             c.commit(asynchronous=False)
             # Mandar mensagem para AI
-            response = start_recognization(msg.value())
-            topic = RESPONSE_TOPIC
-            p = create_producer()
-            try:
-                data = response
-                p.produce(topic, data, callback=delivery_callback)
-            except BufferError as e:
-                print('%% Local producer queue is full (%d messages awaiting delivery): try again\n',len(p))
-            p.poll(0)
-            print('%% Waiting for %d deliveries\n' % len(p))
-            p.flush()
+            thread = threading.Thread(target=start_image_processing, args=(msg,))
+            thread.start()
         except KeyboardInterrupt:
             break
     c.close()
 
+
+def start_image_processing(msg):
+    print("Processing image...")
+    response = start_recognization(msg.value()) 
+    topic = RESPONSE_TOPIC
+    p = create_producer()
+    try:
+        data = response
+        p.produce(topic, data, callback=delivery_callback)
+    except BufferError as e:
+          print('%% Local producer queue is full (%d messages awaiting delivery): try again\n',len(p))
+    p.poll(0)
+    print('%% Waiting for %d deliveries\n' % len(p))
+    p.flush()
+    
+
+print("Starting consumer...")
 consumer = create_consumer()
 consume(consumer)

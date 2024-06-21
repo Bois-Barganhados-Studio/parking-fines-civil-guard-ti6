@@ -69,13 +69,16 @@ services:
       replicas: 1
       endpoint_mode: vip
       placement:
-        max_replicas_per_node: 1
+        max_replicas_per_node: 2
       update_config:
         failure_action: pause
         parallelism: 2
-        delay: 0s
+        delay: 1s
       restart_policy:
-        condition: none
+        condition: on-failure
+        delay: 5s
+        max_attempts: 3
+        window: 120s
 
   kafka:
     image: 'bitnami/kafka:latest'

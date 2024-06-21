@@ -42,6 +42,14 @@ RUN adduser --system --uid 1001 nextjs
 # COPY --from=builder /front/app/package.json ./package.json
 # COPY --from=builder /front/app/.env ./.env
 
+
+# Add chown and permission to files to avoid permission denied
+RUN chown -R nextjs:nodejs /front/app/.next
+RUN chown -R nextjs:nodejs /front/app/node_modules
+RUN chown -R nextjs:nodejs /front/app/public
+RUN chown -R nextjs:nodejs /front/app/package.json
+RUN chown -R nextjs:nodejs /front/app/.env
+
 USER nextjs
 
 EXPOSE 3000
